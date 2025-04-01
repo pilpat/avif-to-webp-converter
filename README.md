@@ -9,10 +9,6 @@ A simple web application that converts AVIF image files to WebP format.
 - Automatic download of converted files
 - Simple and clean user interface
 
-## Live Demo
-
-Visit the live app: [https://aviftowebp.netlify.app/](https://aviftowebp.netlify.app/)
-
 ## Technologies Used
 
 - HTML, CSS, JavaScript
