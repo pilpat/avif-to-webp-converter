@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
 
         // Send file to server for conversion
-        fetch('/convert', {
+        fetch('/.netlify/functions/convert', {
             method: 'POST',
             body: formData
         })

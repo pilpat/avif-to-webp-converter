@@ -4,6 +4,6 @@
   publish = "public"
 
 [[redirects]]
-  from = "/convert"
-  to = "/.netlify/functions/convert"
+  from = "/*"
+  to = "/index.html"
   status = 200

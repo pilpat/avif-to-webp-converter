@@ -24,10 +24,10 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const file = files.image;
+    const file = files.image[0]; // Access the first item in the array
     
     // Read the file buffer
-    const inputBuffer = await fs.readFile(file.path);
+    const inputBuffer = await fs.readFile(file.filepath); // Use filepath instead of path
     
     // Convert AVIF to WebP using sharp
     const outputBuffer = await sharp(inputBuffer)
@@ -35,10 +35,10 @@ exports.handler = async function(event, context) {
       .toBuffer();
     
     // Clean up temporary files
-    await fs.unlink(file.path);
+    await fs.unlink(file.filepath);
     
     // Get original filename without extension
-    const originalName = path.basename(file.name, path.extname(file.name));
+    const originalName = path.basename(file.originalFilename, path.extname(file.originalFilename));
     const webpFilename = `${originalName}.webp`;
     
     // Return the converted file as a downloadable
@@ -56,7 +56,7 @@ exports.handler = async function(event, context) {
     console.error('Conversion error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Error converting the file" })
+      body: JSON.stringify({ error: "Error converting the file", details: error.toString() })
     };
   }
 };
@@ -64,22 +64,29 @@ exports.handler = async function(event, context) {
 // Function to parse form data
 function parseFormData(event) {
   return new Promise((resolve, reject) => {
-    const form = formidable({ multiples: false });
-    
     // Create the temporary directory for file uploads
     const tmpDir = path.join('/tmp', 'avif-converter');
     fs.ensureDirSync(tmpDir);
     
-    form.uploadDir = tmpDir;
-    form.keepExtensions = true;
+    const options = {
+      uploadDir: tmpDir,
+      keepExtensions: true,
+      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+      multiples: false
+    };
     
-    // Parse the raw request body
-    form.parse(
-      { headers: event.headers, body: Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8') }, 
-      (err, fields, files) => {
-        if (err) return reject(err);
-        resolve({ fields, files });
-      }
-    );
+    const form = formidable(options);
+    
+    // Create a simple request-like object that formidable can process
+    const req = {
+      headers: event.headers,
+      body: Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8')
+    };
+    
+    // Parse the request
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
+      resolve({ fields, files });
+    });
   });
 }
