@@ -1,0 +1,26 @@
+{
+  "name": "avif-to-webp-converter",
+  "version": "1.0.0",
+  "description": "A web app that converts AVIF images to WebP format",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "mkdir -p netlify/functions && netlify-lambda build netlify/functions"
+  },
+  "keywords": ["avif", "webp", "image conversion", "netlify"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "formidable": "^3.5.1",
+    "fs-extra": "^11.2.0",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.2"
+  },
+  "devDependencies": {
+    "netlify-lambda": "^2.0.16",
+    "nodemon": "^3.0.3"
+  }
+}
