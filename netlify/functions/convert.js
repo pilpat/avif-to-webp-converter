@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const formidable = require('formidable');
+const { Formidable } = require('formidable');
 const fs = require('fs-extra');
 const path = require('path');
 const { Buffer } = require('buffer');
@@ -68,7 +68,7 @@ function parseFormData(event) {
     const tmpDir = path.join('/tmp', 'avif-converter');
     fs.ensureDirSync(tmpDir);
     
-    const form = formidable({
+    const form = new Formidable({
       uploadDir: tmpDir,
       keepExtensions: true,
       maxFileSize: 10 * 1024 * 1024, // 10MB limit
