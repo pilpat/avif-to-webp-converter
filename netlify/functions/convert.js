@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const formidable = require('formidable');
+const { formidable } = require('formidable');
 const fs = require('fs-extra');
 const path = require('path');
 const { Buffer } = require('buffer');
@@ -75,7 +75,7 @@ function parseFormData(event) {
       multiples: false
     };
     
-    const form = formidable(options);
+    const form = new formidable.IncomingForm(options);
     
     // Create a simple request-like object that formidable can process
     const req = {
