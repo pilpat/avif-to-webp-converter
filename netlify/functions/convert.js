@@ -3,7 +3,6 @@ const formidable = require('formidable');
 const fs = require('fs-extra');
 const path = require('path');
 const { Buffer } = require('buffer');
-const { EventEmitter } = require('events');
 
 exports.handler = async function(event, context) {
   // Only allow POST
@@ -68,34 +67,35 @@ function parseFormData(event) {
     // Create the temporary directory for file uploads
     const tmpDir = path.join('/tmp', 'avif-converter');
     fs.ensureDirSync(tmpDir);
-    
-    const form = new formidable.IncomingForm({
+
+    // Create a formidable instance with options to avoid streams
+    const form = formidable({
       uploadDir: tmpDir,
       keepExtensions: true,
       maxFileSize: 10 * 1024 * 1024, // 10MB limit
-      multiples: false // Set to false in v2 since we only need one file
-    });
-    
-    // Create a request-like object with event emitter capabilities
-    const req = Object.assign(new EventEmitter(), {
-      headers: event.headers,
-      method: event.httpMethod,
-      url: event.path
+      multiples: false,
+      fileWriteStreamHandler: () => null // Prevent formidable from using streams
     });
 
-    // Set up the request body
-    const bodyBuffer = Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8');
-    
-    // Parse the request
+    // Create a mock request object
+    const contentType = event.headers['content-type'] || event.headers['Content-Type'];
+    const req = {
+      headers: {
+        'content-type': contentType
+      }
+    };
+
+    // Add the raw body data
+    const buffer = Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8');
+    req.body = buffer;
+
+    // Parse the form data
     form.parse(req, (err, fields, files) => {
-      if (err) return reject(err);
+      if (err) {
+        console.error('Form parsing error:', err);
+        return reject(err);
+      }
       resolve({ fields, files });
-    });
-
-    // Emit the data events manually
-    process.nextTick(() => {
-      req.emit('data', bodyBuffer);
-      req.emit('end');
     });
   });
 }
