@@ -3,6 +3,8 @@ const formidable = require('formidable');
 const fs = require('fs-extra');
 const path = require('path');
 const { Buffer } = require('buffer');
+const { EventEmitter } = require('events');
+const { Readable } = require('stream');
 
 exports.handler = async function(event, context) {
   // Only allow POST
@@ -75,11 +77,19 @@ function parseFormData(event) {
       multiples: false // Set to false in v2 since we only need one file
     });
     
-    // Create a simple request-like object that formidable can process
-    const req = {
+    // Create a proper request object that formidable can process
+    const req = Object.assign(new EventEmitter(), {
       headers: event.headers,
-      body: Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8')
-    };
+      method: event.httpMethod,
+      url: event.path
+    });
+
+    // Create a readable stream from the request body
+    const bodyBuffer = Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8');
+    const stream = Readable.from(bodyBuffer);
+
+    // Pipe the stream to the request object
+    stream.pipe(req);
     
     // Parse the request
     form.parse(req, (err, fields, files) => {
